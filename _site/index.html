@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Predicting Power Outage Duration | power-outage-duration-analysis</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Predicting Power Outage Duration" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Final project for EECS398 at University of Michigan" />
+<meta property="og:description" content="Final project for EECS398 at University of Michigan" />
+<link rel="canonical" href="http://localhost:4000/" />
+<meta property="og:url" content="http://localhost:4000/" />
+<meta property="og:site_name" content="power-outage-duration-analysis" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Predicting Power Outage Duration" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"Final project for EECS398 at University of Michigan","headline":"Predicting Power Outage Duration","name":"power-outage-duration-analysis","url":"http://localhost:4000/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="preload" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" as="style" type="text/css" crossorigin>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="/assets/css/style.css?v=063f8ca0d02b924a7229c92e18f0d504f3fce890">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <a id="skip-to-content" href="#content">Skip to the content.</a>
+
+    <header class="page-header" role="banner">
+      <h1 class="project-name">Predicting Power Outage Duration</h1>
+      <h2 class="project-tagline">Final project for EECS398 at University of Michigan</h2>
+      
+        <a href="https://github.com/graceliu15/power-outage-duration-analysis" class="btn">View on GitHub</a>
+      
+      
+    </header>
+
+    <main id="content" class="main-content" role="main">
+      <h1 id="predicting-power-outage-duration">Predicting Power Outage Duration</h1>
+
+<p>By Grace Liu (gracela@umich.edu)</p>
+
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#data-cleaning">Data Cleaning</a></li>
+  <li><a href="#exploratory-data-analysis">Exploratory Data Analysis</a></li>
+  <li><a href="#problem-identification">Problem Identification</a></li>
+  <li><a href="#baseline-model">Baseline Model</a></li>
+  <li><a href="#final-model">Final Model</a></li>
+  <li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+<p>Have you ever been stuck in a power outage, patiently waiting for the electricity to come back only for DTE’s predictions to be wrong again? What if you could predict how long an outage will last by yourself? As prolonged outages lead to greater disruptions in daily life, it is important energy companies provide consumers with an accurate estimate of how long a power outage will last, so they can prepare, whether it’s for a few hours or several days without electricity.</p>
+
+<p>This analysis will explore this dataset which contains climate, geographic, and economic information pertaining to major power outages in the United States from January 2000 – July 2016. This dataset contains <strong>1534 rows</strong> (observations) and <strong>55 columns</strong> (features).</p>
+
+<h2 id="investigative-question">Investigative Question</h2>
+<p>Specifically, the following analysis will focus on power outages caused by severe weather to answer the following question:</p>
+
+<ul>
+  <li><strong>How does the cause, climate region, and climate category impact the duration of power outages due to severe weather?</strong></li>
+</ul>
+
+<h2 id="key-features">Key Features</h2>
+<p>The following columns will be used to address this question:</p>
+<ul>
+  <li><strong><code class="language-plaintext highlighter-rouge">OUTAGE.DURATION</code></strong>: Duration of outage events (in minutes)</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY.DETAIL</code></strong>: Detailed description of the event categories causing the major power outages such as heavy wind, thunderstorm, tornado, etc.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">CLIMATE.REGION</code></strong>: U.S. Climate regions as specified by National Centers for Environmental Information (nine climatically consistent regions in continental U.S.A.). This includes Central, East North Central, Northeast, Northwest, South, Southeast, Southwest, West, and West North Central.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">CLIMATE.CATEGORY</code></strong>: Represents the climate episodes corresponding to the years. The categories—“Warm”, “Cold” or “Normal” episodes of the climate are based on a threshold of ± 0.5 °C for the Oceanic Niño Index (ONI)</li>
+</ul>
+
+<h2 id="data-cleaning">Data Cleaning</h2>
+<p>To ensure a meaningful and valid data analysis, the following steps were taken to clean and organize the dataset:</p>
+
+<p><strong>Removing Unnecessary Columns</strong>: The original Excel sheet containing the dataset included empty rows at the top and left, which did not contribute any meaningful information, so the dataset was read in starting from the sixth row and second column.</p>
+
+<p><strong>Extracting Relevant Information</strong>: Since the research question specifically focuses on power outages caused by severe weather, only the rows where the value of <code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY</code> was “severe weather” were kept.</p>
+
+<p><strong>Dropping Missing Values in the Response</strong>: Since the analysis aims to predict outage duration, any rows where the value of <code class="language-plaintext highlighter-rouge">OUTAGE.DURATION</code> was NaN were dropped since this analysis utilizes supervised learning, which requires a known target value in order to train the model. Furthermore, rows where <code class="language-plaintext highlighter-rouge">OUTAGE.DURATION</code> were equal to 0 were also dropped, since it is unreasonable for a power outage to last 0 minutes, and will lead to lower predictions than it should.</p>
+
+<p><strong>Creating New Features</strong>: In order to make the response more interpretable, a new column, <code class="language-plaintext highlighter-rouge">OUTAGE.DURATION.HOURS</code> was created by dividing <code class="language-plaintext highlighter-rouge">OUTAGE.DURATION</code> by 60. This new column holds the outage duration in hours rather than minutes.</p>
+
+<p><strong>Handling Missing Values in the Predictors</strong>: Each predictor column in the reduced dataframe was checked for missing values, revealing 175 NaN values in the <code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY.DETAIL</code> column and 3 NaN values in the <code class="language-plaintext highlighter-rouge">CLIMATE.REGION</code> category. This issue was addressed with imputation, as described below.</p>
+
+<h2 id="imputation">Imputation</h2>
+<p>Rather than dropping 175 total observations, which is a rather large portion of the data, <strong>conditional probabilistic imputation</strong> was utilized to fill in the missing values in the <code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY.DETAIL</code> and <code class="language-plaintext highlighter-rouge">CLIMATE.REGION</code> column. Intuitively, the temperature of a region are relevant indicators to the location of that region as well as the types of weather patterns present and the occurrence of severe weather events.</p>
+
+<div style="display: flex; gap: 40px; justify-content: center;">
+  <iframe src="assets/cause-impute.html" width="600" height="500" frameborder="0" style="flex-shrink: 0;"></iframe>
+
+  <iframe src="assets/region-impute.html" width="600" height="500" frameborder="0" style="flex-shrink: 0;"></iframe>
+</div>
+
+<p>After plotting <code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY.DETAIL</code> against <code class="language-plaintext highlighter-rouge">CLIMATE.CATEGORY</code> in the figure above, it can be seen that the number of winter storms is much higher for cold climates compared to warm climates. Furthermore, most outages in normal climates were caused by thunderstorms, so it is not unlikely that the missing value associated with a normal climate is also thunderstorm. Similar conclusions can be drawn from the plot of <code class="language-plaintext highlighter-rouge">CLIMATE.REGION</code> against <code class="language-plaintext highlighter-rouge">CLIMATE.CATEGORY</code> where most cold climates occur in the northeast and most warm climates occur in the southeast.</p>
+
+<p>As such, all observations in the dataset were grouped by <code class="language-plaintext highlighter-rouge">CLIMATE.CATEGORY</code>, and within that group, a random sample of <code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY.DETAIL</code> values were chosen to fill in the missing values. This ensures that the overall distribution of <code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY.DETAIL</code> stays relatively the same and is not skewed toward any particular severe weather event, as seen in the before and after distributions below.</p>
+
+<div style="display: flex; gap: 20px; justify-content: center;">
+  <iframe src="assets/before-impute.html" width="600" height="500" frameborder="0" style="flex-shrink: 0;"></iframe>
+
+  <iframe src="assets/after-impute.html" width="600" height="500" frameborder="0" style="flex-shrink: 0;"></iframe>
+</div>
+
+<p>After cleaning, the final data frame that will be used for analysis has 741 observations. The head of the cleaned dataset can be seen below:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: right">OBS</th>
+      <th style="text-align: right">YEAR</th>
+      <th style="text-align: right">MONTH</th>
+      <th style="text-align: left">U.S._STATE</th>
+      <th style="text-align: left">POSTAL.CODE</th>
+      <th style="text-align: left">NERC.REGION</th>
+      <th style="text-align: left">CLIMATE.REGION</th>
+      <th style="text-align: right">ANOMALY.LEVEL</th>
+      <th style="text-align: left">CLIMATE.CATEGORY</th>
+      <th style="text-align: left">OUTAGE.START.DATE</th>
+      <th style="text-align: left">OUTAGE.START.TIME</th>
+      <th style="text-align: left">OUTAGE.RESTORATION.DATE</th>
+      <th style="text-align: left">OUTAGE.RESTORATION.TIME</th>
+      <th style="text-align: left">CAUSE.CATEGORY</th>
+      <th style="text-align: left">CAUSE.CATEGORY.DETAIL</th>
+      <th style="text-align: right">HURRICANE.NAMES</th>
+      <th style="text-align: right">OUTAGE.DURATION</th>
+      <th style="text-align: right">DEMAND.LOSS.MW</th>
+      <th style="text-align: right">CUSTOMERS.AFFECTED</th>
+      <th style="text-align: right">RES.PRICE</th>
+      <th style="text-align: right">COM.PRICE</th>
+      <th style="text-align: right">IND.PRICE</th>
+      <th style="text-align: right">TOTAL.PRICE</th>
+      <th style="text-align: right">RES.SALES</th>
+      <th style="text-align: right">COM.SALES</th>
+      <th style="text-align: right">IND.SALES</th>
+      <th style="text-align: right">TOTAL.SALES</th>
+      <th style="text-align: right">RES.PERCEN</th>
+      <th style="text-align: right">COM.PERCEN</th>
+      <th style="text-align: right">IND.PERCEN</th>
+      <th style="text-align: right">RES.CUSTOMERS</th>
+      <th style="text-align: right">COM.CUSTOMERS</th>
+      <th style="text-align: right">IND.CUSTOMERS</th>
+      <th style="text-align: right">TOTAL.CUSTOMERS</th>
+      <th style="text-align: right">RES.CUST.PCT</th>
+      <th style="text-align: right">COM.CUST.PCT</th>
+      <th style="text-align: right">IND.CUST.PCT</th>
+      <th style="text-align: right">PC.REALGSP.STATE</th>
+      <th style="text-align: right">PC.REALGSP.USA</th>
+      <th style="text-align: right">PC.REALGSP.REL</th>
+      <th style="text-align: right">PC.REALGSP.CHANGE</th>
+      <th style="text-align: right">UTIL.REALGSP</th>
+      <th style="text-align: right">TOTAL.REALGSP</th>
+      <th style="text-align: right">UTIL.CONTRI</th>
+      <th style="text-align: right">PI.UTIL.OFUSA</th>
+      <th style="text-align: right">POPULATION</th>
+      <th style="text-align: right">POPPCT_URBAN</th>
+      <th style="text-align: right">POPPCT_UC</th>
+      <th style="text-align: right">POPDEN_URBAN</th>
+      <th style="text-align: right">POPDEN_UC</th>
+      <th style="text-align: right">POPDEN_RURAL</th>
+      <th style="text-align: right">AREAPCT_URBAN</th>
+      <th style="text-align: right">AREAPCT_UC</th>
+      <th style="text-align: right">PCT_LAND</th>
+      <th style="text-align: right">PCT_WATER_TOT</th>
+      <th style="text-align: right">PCT_WATER_INLAND</th>
+      <th style="text-align: left">OUTAGE.START</th>
+      <th style="text-align: left">OUTAGE.RESTORATION</th>
+      <th style="text-align: right">OUTAGE.DURATION.HOURS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">2011</td>
+      <td style="text-align: right">7</td>
+      <td style="text-align: left">Minnesota</td>
+      <td style="text-align: left">MN</td>
+      <td style="text-align: left">MRO</td>
+      <td style="text-align: left">East North Central</td>
+      <td style="text-align: right">-0.3</td>
+      <td style="text-align: left">normal</td>
+      <td style="text-align: left">2011-07-01 00:00:00</td>
+      <td style="text-align: left">17:00:00</td>
+      <td style="text-align: left">2011-07-03 00:00:00</td>
+      <td style="text-align: left">20:00:00</td>
+      <td style="text-align: left">severe weather</td>
+      <td style="text-align: left">thunderstorm</td>
+      <td style="text-align: right">nan</td>
+      <td style="text-align: right">3060</td>
+      <td style="text-align: right">nan</td>
+      <td style="text-align: right">70000</td>
+      <td style="text-align: right">11.6</td>
+      <td style="text-align: right">9.18</td>
+      <td style="text-align: right">6.81</td>
+      <td style="text-align: right">9.28</td>
+      <td style="text-align: right">2.33292e+06</td>
+      <td style="text-align: right">2.11477e+06</td>
+      <td style="text-align: right">2.11329e+06</td>
+      <td style="text-align: right">6.56252e+06</td>
+      <td style="text-align: right">35.5491</td>
+      <td style="text-align: right">32.225</td>
+      <td style="text-align: right">32.2024</td>
+      <td style="text-align: right">2308736</td>
+      <td style="text-align: right">276286</td>
+      <td style="text-align: right">10673</td>
+      <td style="text-align: right">2595696</td>
+      <td style="text-align: right">88.9448</td>
+      <td style="text-align: right">10.644</td>
+      <td style="text-align: right">0.411181</td>
+      <td style="text-align: right">51268</td>
+      <td style="text-align: right">47586</td>
+      <td style="text-align: right">1.07738</td>
+      <td style="text-align: right">1.6</td>
+      <td style="text-align: right">4802</td>
+      <td style="text-align: right">274182</td>
+      <td style="text-align: right">1.75139</td>
+      <td style="text-align: right">2.2</td>
+      <td style="text-align: right">5348119</td>
+      <td style="text-align: right">73.27</td>
+      <td style="text-align: right">15.28</td>
+      <td style="text-align: right">2279</td>
+      <td style="text-align: right">1700.5</td>
+      <td style="text-align: right">18.2</td>
+      <td style="text-align: right">2.14</td>
+      <td style="text-align: right">0.6</td>
+      <td style="text-align: right">91.5927</td>
+      <td style="text-align: right">8.40733</td>
+      <td style="text-align: right">5.47874</td>
+      <td style="text-align: left">2011-07-01 17:00:00</td>
+      <td style="text-align: left">2011-07-03 20:00:00</td>
+      <td style="text-align: right">51</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">3</td>
+      <td style="text-align: right">2010</td>
+      <td style="text-align: right">10</td>
+      <td style="text-align: left">Minnesota</td>
+      <td style="text-align: left">MN</td>
+      <td style="text-align: left">MRO</td>
+      <td style="text-align: left">East North Central</td>
+      <td style="text-align: right">-1.5</td>
+      <td style="text-align: left">cold</td>
+      <td style="text-align: left">2010-10-26 00:00:00</td>
+      <td style="text-align: left">20:00:00</td>
+      <td style="text-align: left">2010-10-28 00:00:00</td>
+      <td style="text-align: left">22:00:00</td>
+      <td style="text-align: left">severe weather</td>
+      <td style="text-align: left">heavy wind</td>
+      <td style="text-align: right">nan</td>
+      <td style="text-align: right">3000</td>
+      <td style="text-align: right">nan</td>
+      <td style="text-align: right">70000</td>
+      <td style="text-align: right">10.87</td>
+      <td style="text-align: right">8.19</td>
+      <td style="text-align: right">6.07</td>
+      <td style="text-align: right">8.15</td>
+      <td style="text-align: right">1.46729e+06</td>
+      <td style="text-align: right">1.80168e+06</td>
+      <td style="text-align: right">1.9513e+06</td>
+      <td style="text-align: right">5.22212e+06</td>
+      <td style="text-align: right">28.0977</td>
+      <td style="text-align: right">34.501</td>
+      <td style="text-align: right">37.366</td>
+      <td style="text-align: right">2300291</td>
+      <td style="text-align: right">276463</td>
+      <td style="text-align: right">10150</td>
+      <td style="text-align: right">2586905</td>
+      <td style="text-align: right">88.9206</td>
+      <td style="text-align: right">10.687</td>
+      <td style="text-align: right">0.392361</td>
+      <td style="text-align: right">50447</td>
+      <td style="text-align: right">47287</td>
+      <td style="text-align: right">1.06683</td>
+      <td style="text-align: right">2.7</td>
+      <td style="text-align: right">4571</td>
+      <td style="text-align: right">267895</td>
+      <td style="text-align: right">1.70627</td>
+      <td style="text-align: right">2.1</td>
+      <td style="text-align: right">5310903</td>
+      <td style="text-align: right">73.27</td>
+      <td style="text-align: right">15.28</td>
+      <td style="text-align: right">2279</td>
+      <td style="text-align: right">1700.5</td>
+      <td style="text-align: right">18.2</td>
+      <td style="text-align: right">2.14</td>
+      <td style="text-align: right">0.6</td>
+      <td style="text-align: right">91.5927</td>
+      <td style="text-align: right">8.40733</td>
+      <td style="text-align: right">5.47874</td>
+      <td style="text-align: left">2010-10-26 20:00:00</td>
+      <td style="text-align: left">2010-10-28 22:00:00</td>
+      <td style="text-align: right">50</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">4</td>
+      <td style="text-align: right">2012</td>
+      <td style="text-align: right">6</td>
+      <td style="text-align: left">Minnesota</td>
+      <td style="text-align: left">MN</td>
+      <td style="text-align: left">MRO</td>
+      <td style="text-align: left">East North Central</td>
+      <td style="text-align: right">-0.1</td>
+      <td style="text-align: left">normal</td>
+      <td style="text-align: left">2012-06-19 00:00:00</td>
+      <td style="text-align: left">04:30:00</td>
+      <td style="text-align: left">2012-06-20 00:00:00</td>
+      <td style="text-align: left">23:00:00</td>
+      <td style="text-align: left">severe weather</td>
+      <td style="text-align: left">thunderstorm</td>
+      <td style="text-align: right">nan</td>
+      <td style="text-align: right">2550</td>
+      <td style="text-align: right">nan</td>
+      <td style="text-align: right">68200</td>
+      <td style="text-align: right">11.79</td>
+      <td style="text-align: right">9.25</td>
+      <td style="text-align: right">6.71</td>
+      <td style="text-align: right">9.19</td>
+      <td style="text-align: right">1.85152e+06</td>
+      <td style="text-align: right">1.94117e+06</td>
+      <td style="text-align: right">1.99303e+06</td>
+      <td style="text-align: right">5.78706e+06</td>
+      <td style="text-align: right">31.9941</td>
+      <td style="text-align: right">33.5433</td>
+      <td style="text-align: right">34.4393</td>
+      <td style="text-align: right">2317336</td>
+      <td style="text-align: right">278466</td>
+      <td style="text-align: right">11010</td>
+      <td style="text-align: right">2606813</td>
+      <td style="text-align: right">88.8954</td>
+      <td style="text-align: right">10.6822</td>
+      <td style="text-align: right">0.422355</td>
+      <td style="text-align: right">51598</td>
+      <td style="text-align: right">48156</td>
+      <td style="text-align: right">1.07148</td>
+      <td style="text-align: right">0.6</td>
+      <td style="text-align: right">5364</td>
+      <td style="text-align: right">277627</td>
+      <td style="text-align: right">1.93209</td>
+      <td style="text-align: right">2.2</td>
+      <td style="text-align: right">5380443</td>
+      <td style="text-align: right">73.27</td>
+      <td style="text-align: right">15.28</td>
+      <td style="text-align: right">2279</td>
+      <td style="text-align: right">1700.5</td>
+      <td style="text-align: right">18.2</td>
+      <td style="text-align: right">2.14</td>
+      <td style="text-align: right">0.6</td>
+      <td style="text-align: right">91.5927</td>
+      <td style="text-align: right">8.40733</td>
+      <td style="text-align: right">5.47874</td>
+      <td style="text-align: left">2012-06-19 04:30:00</td>
+      <td style="text-align: left">2012-06-20 23:00:00</td>
+      <td style="text-align: right">42.5</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">5</td>
+      <td style="text-align: right">2015</td>
+      <td style="text-align: right">7</td>
+      <td style="text-align: left">Minnesota</td>
+      <td style="text-align: left">MN</td>
+      <td style="text-align: left">MRO</td>
+      <td style="text-align: left">East North Central</td>
+      <td style="text-align: right">1.2</td>
+      <td style="text-align: left">warm</td>
+      <td style="text-align: left">2015-07-18 00:00:00</td>
+      <td style="text-align: left">02:00:00</td>
+      <td style="text-align: left">2015-07-19 00:00:00</td>
+      <td style="text-align: left">07:00:00</td>
+      <td style="text-align: left">severe weather</td>
+      <td style="text-align: left">wind/rain</td>
+      <td style="text-align: right">nan</td>
+      <td style="text-align: right">1740</td>
+      <td style="text-align: right">250</td>
+      <td style="text-align: right">250000</td>
+      <td style="text-align: right">13.07</td>
+      <td style="text-align: right">10.16</td>
+      <td style="text-align: right">7.74</td>
+      <td style="text-align: right">10.43</td>
+      <td style="text-align: right">2.02888e+06</td>
+      <td style="text-align: right">2.16161e+06</td>
+      <td style="text-align: right">1.77794e+06</td>
+      <td style="text-align: right">5.97034e+06</td>
+      <td style="text-align: right">33.9826</td>
+      <td style="text-align: right">36.2059</td>
+      <td style="text-align: right">29.7795</td>
+      <td style="text-align: right">2374674</td>
+      <td style="text-align: right">289044</td>
+      <td style="text-align: right">9812</td>
+      <td style="text-align: right">2673531</td>
+      <td style="text-align: right">88.8216</td>
+      <td style="text-align: right">10.8113</td>
+      <td style="text-align: right">0.367005</td>
+      <td style="text-align: right">54431</td>
+      <td style="text-align: right">49844</td>
+      <td style="text-align: right">1.09203</td>
+      <td style="text-align: right">1.7</td>
+      <td style="text-align: right">4873</td>
+      <td style="text-align: right">292023</td>
+      <td style="text-align: right">1.6687</td>
+      <td style="text-align: right">2.2</td>
+      <td style="text-align: right">5489594</td>
+      <td style="text-align: right">73.27</td>
+      <td style="text-align: right">15.28</td>
+      <td style="text-align: right">2279</td>
+      <td style="text-align: right">1700.5</td>
+      <td style="text-align: right">18.2</td>
+      <td style="text-align: right">2.14</td>
+      <td style="text-align: right">0.6</td>
+      <td style="text-align: right">91.5927</td>
+      <td style="text-align: right">8.40733</td>
+      <td style="text-align: right">5.47874</td>
+      <td style="text-align: left">2015-07-18 02:00:00</td>
+      <td style="text-align: left">2015-07-19 07:00:00</td>
+      <td style="text-align: right">29</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">6</td>
+      <td style="text-align: right">2010</td>
+      <td style="text-align: right">11</td>
+      <td style="text-align: left">Minnesota</td>
+      <td style="text-align: left">MN</td>
+      <td style="text-align: left">MRO</td>
+      <td style="text-align: left">East North Central</td>
+      <td style="text-align: right">-1.4</td>
+      <td style="text-align: left">cold</td>
+      <td style="text-align: left">2010-11-13 00:00:00</td>
+      <td style="text-align: left">15:00:00</td>
+      <td style="text-align: left">2010-11-14 00:00:00</td>
+      <td style="text-align: left">22:00:00</td>
+      <td style="text-align: left">severe weather</td>
+      <td style="text-align: left">winter storm</td>
+      <td style="text-align: right">nan</td>
+      <td style="text-align: right">1860</td>
+      <td style="text-align: right">nan</td>
+      <td style="text-align: right">60000</td>
+      <td style="text-align: right">10.63</td>
+      <td style="text-align: right">8.34</td>
+      <td style="text-align: right">6.15</td>
+      <td style="text-align: right">8.28</td>
+      <td style="text-align: right">1.67635e+06</td>
+      <td style="text-align: right">1.78614e+06</td>
+      <td style="text-align: right">1.90987e+06</td>
+      <td style="text-align: right">5.37415e+06</td>
+      <td style="text-align: right">31.1928</td>
+      <td style="text-align: right">33.2358</td>
+      <td style="text-align: right">35.5382</td>
+      <td style="text-align: right">2300291</td>
+      <td style="text-align: right">276463</td>
+      <td style="text-align: right">10150</td>
+      <td style="text-align: right">2586905</td>
+      <td style="text-align: right">88.9206</td>
+      <td style="text-align: right">10.687</td>
+      <td style="text-align: right">0.392361</td>
+      <td style="text-align: right">50447</td>
+      <td style="text-align: right">47287</td>
+      <td style="text-align: right">1.06683</td>
+      <td style="text-align: right">2.7</td>
+      <td style="text-align: right">4571</td>
+      <td style="text-align: right">267895</td>
+      <td style="text-align: right">1.70627</td>
+      <td style="text-align: right">2.1</td>
+      <td style="text-align: right">5310903</td>
+      <td style="text-align: right">73.27</td>
+      <td style="text-align: right">15.28</td>
+      <td style="text-align: right">2279</td>
+      <td style="text-align: right">1700.5</td>
+      <td style="text-align: right">18.2</td>
+      <td style="text-align: right">2.14</td>
+      <td style="text-align: right">0.6</td>
+      <td style="text-align: right">91.5927</td>
+      <td style="text-align: right">8.40733</td>
+      <td style="text-align: right">5.47874</td>
+      <td style="text-align: left">2010-11-13 15:00:00</td>
+      <td style="text-align: left">2010-11-14 22:00:00</td>
+      <td style="text-align: right">31</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="exploratory-data-analysis">Exploratory Data Analysis</h2>
+
+<p><strong><u>Univariate Analysis of Power Outage Duration</u></strong></p>
+
+<iframe src="assets/eda-1.html" width="800" height="500" frameborder="0"></iframe>
+
+<p>This histogram shows the frequency of different duration ranges, and was created by partitioning <code class="language-plaintext highlighter-rouge">OUTAGE.DURATION.HOURS</code> into 30 bins. Based on the plot, the frequency of different power outage durations is heavily skewed to the right, with most power outages lasting below 75 hours. However, there are a few outliers that lasted around 800 hours (over a month long!). Based on this plot alone, the best estimate for power outage duration would be between 0 - 25 hours.</p>
+
+<p><strong><u>Bivariate Analysis of Severe Weather Events and Outage Duration</u></strong></p>
+
+<iframe src="assets/eda-2.html" width="800" height="500" frameborder="0"></iframe>
+
+<p>This bar chart shows the average outage duration for each type of severe weather event that has caused a power outage, and was created by grouping the data by <code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY.DETAIL</code> and calculating the mean for each group. It can be seen that power outages due to flooding (~280 hours) last the longest and are over twice as long as power outages caused by hurricanes (~116 hours), which are the second longest. By analyzing the relationship between these two variables, more informed estimates can be made to answer the research question. For example, outages caused by tornadoes typically last 70 hours and should be predicted to last longer than outages caused by earthquakes.</p>
+
+<p><strong><u>Aggregate Analysis Climate Category and Climate Region</u></strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: right">Central</th>
+      <th style="text-align: right">East North Central</th>
+      <th style="text-align: right">Northeast</th>
+      <th style="text-align: right">Northwest</th>
+      <th style="text-align: right">South</th>
+      <th style="text-align: right">Southeast</th>
+      <th style="text-align: right">Southwest</th>
+      <th style="text-align: right">West</th>
+      <th style="text-align: right">West North Central</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: right">53.1178</td>
+      <td style="text-align: right">77.5772</td>
+      <td style="text-align: right">60.4458</td>
+      <td style="text-align: right">59.7119</td>
+      <td style="text-align: right">56.5302</td>
+      <td style="text-align: right">37.1899</td>
+      <td style="text-align: right">20.7611</td>
+      <td style="text-align: right">44.216</td>
+      <td style="text-align: right">1</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">53.1128</td>
+      <td style="text-align: right">76.8629</td>
+      <td style="text-align: right">77.9442</td>
+      <td style="text-align: right">80.8542</td>
+      <td style="text-align: right">89.8986</td>
+      <td style="text-align: right">47.2148</td>
+      <td style="text-align: right">4.71667</td>
+      <td style="text-align: right">54.2135</td>
+      <td style="text-align: right">0.0666667</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">72.05</td>
+      <td style="text-align: right">55.1289</td>
+      <td style="text-align: right">92.8125</td>
+      <td style="text-align: right">91.031</td>
+      <td style="text-align: right">48.7269</td>
+      <td style="text-align: right">47.5672</td>
+      <td style="text-align: right">310.303</td>
+      <td style="text-align: right">49.0958</td>
+      <td style="text-align: right">80.8833</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>This pivot table shows the average power outage duration for each combination of climate category (cold, normal, warm) and climate region (Central, East North Central, Northeast, Northwest, South, Southeast, Southwest, West, and West North Central). Based on the table, it appears that normal climates in the West North Central region have the shortest outages lasting 0.07 hours on average, and warm climates in the Southwest region have the longest outages lasting 431.21 hours on average. It can also be seen that power outages in warm climates usually last longer than outages in normal and cold climates. Additionally, outages in the South, West, and West North Central are generally shorter than outages elsewhere in the United States. 
+By combining the information this table provides with the bar chart above, we can answer the research question with even greater granularity. For example, the duration of an outage caused by a thunderstorm in a normal climate is generally shorter than an outage caused by a thunderstorm in a warm climate.</p>
+
+<p>However, each of the cells should be analyzed in context of the problem. For example, cold climates are probably uncommon in the Southwest region, suggesting that the 1.10 hour outage duration is likely based on a limited number of outages and thus not representative of the region’s overall outage patterns. Similarly, the values in the West North Central column are significantly lower than those of any other region, which may indicate a limited number of data points rather than genuinely shorter power outages.</p>
+
+<h2 id="problem-identification">Problem Identification</h2>
+<p>The ultimate goal of this report is to predict the length of a power outage caused by severe weather (<code class="language-plaintext highlighter-rouge">OUTAGE.DURATION.HOURS</code>) so power companies can more accurately project when power will be returned, which will ultimately help consumers prepare in terms of supplies and shelter. <code class="language-plaintext highlighter-rouge">OUTAGE.DURATION.HOURS</code> is a quantitative variable so, this prediction problem will be analyzed using a regression model.</p>
+
+<p>At the time of prediction, the power outage will have already started, so the cause and climate of the region will be known. These factors are also key determinants in the type and severity of weather that can cause an outage; for example, winter storms are much worse in cold climates compared to normal climates and will thus most likely lead to longer power outages. As such, the severe weather event (<code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY.DETAIL</code>) along with the climate of where the outage took place (<code class="language-plaintext highlighter-rouge">CLIMATE.REGION</code> and <code class="language-plaintext highlighter-rouge">CLIMATE.CATEGORY</code>) will be used as predictors in this model.</p>
+
+<p>The model will be evaluated using <strong>Mean Squared Error (MSE)</strong>, as it penalizes large prediction errors more heavily. This is important in this context since major prediction errors by energy companies can have significant consequences on consumers who are relying on these predictions to prepare. <strong>Root mean squared error (RMSE)</strong> can also be calculated from MSE quite easily and serves as a good measure of the model’s average prediction error.</p>
+
+<h2 id="baseline-model">Baseline Model</h2>
+<p>The initial model is a multiple linear regression model with the following features:</p>
+<ul>
+  <li><strong>Response</strong>:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">OUTAGE.DURATION</code>: Quantitative</li>
+    </ul>
+  </li>
+  <li><strong>Predictors</strong>:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY.DETAIL</code>: Categorical nominal</li>
+      <li><code class="language-plaintext highlighter-rouge">CLIMATE.REGION</code>: Categorical nominal</li>
+      <li><code class="language-plaintext highlighter-rouge">CLIMATE.CATEGORY</code>: Categorical nominal</li>
+    </ul>
+  </li>
+</ul>
+
+<p>Because the three predictors are all categorical variables, they must be one-hot-encoded before they can be used as predictors. The base model was implemented using an <code class="language-plaintext highlighter-rouge">sklearn Pipeline</code> composed of a <code class="language-plaintext highlighter-rouge">ColumnTransformer</code> with a <code class="language-plaintext highlighter-rouge">OneHotEncoder</code> and a <code class="language-plaintext highlighter-rouge">LinearRegression</code> model before being fit on the training portion of the dataset. A 75-25 train to test ratio was used for this base model as well as all of the following model iterations.</p>
+
+<ul>
+  <li><strong>Test MSE: 6948 hours<sup>2</sup></strong></li>
+  <li><strong>Train MSE: 6114 hours<sup>2</sup></strong></li>
+  <li><strong>Test RMSE: 83 hours</strong></li>
+</ul>
+
+<p>The large test MSE and RMSE values indicate that this baseline model is failing to capture significant trends in the power outage duration, and the large difference between the train and test MSE indicates that the current model may be overfitting to specific details in the training dataset. Thus, there is significant room for improvement in the current model, whose predictions are, on average, off by 83 hours. The following model iterations explore feature engineering, more diverse predictors, and different modeling algorithms to strengthen the current model’s predictive power.</p>
+
+<h2 id="final-model">Final Model</h2>
+<p><strong><u>Iteration 2</u></strong></p>
+
+<p>The first step taken to improve the baseline model was to engineer a new <code class="language-plaintext highlighter-rouge">Season</code> feature out of the <code class="language-plaintext highlighter-rouge">Month</code> column.</p>
+
+<iframe style="border: none; padding: 0; margin: 0; display: block;" src="assets/model2.html" width="800" height="500" frameborder="0"></iframe>
+
+<p>Based on the plot above, there appears to be a relationship between the most common severe weather event and the month, where winter storms were the most common cause in the winter months (December, January, February) and thunderstorms were the most common cause during the summer months (June, July, August). Thus, the 12 months were binned into 4 different seasons:</p>
+
+<ul>
+  <li>Winter: December, January, February</li>
+  <li>Spring: March, April, May</li>
+  <li>Summer: June, July, August</li>
+  <li>Fall: September, October, and November</li>
+</ul>
+
+<p>This function was applied to the Month column to create a new <code class="language-plaintext highlighter-rouge">SEASONS</code> column. Since it is also categorical, the same process used to build the base model was applied (<code class="language-plaintext highlighter-rouge">OneHotEncode</code> the predictors (now including <code class="language-plaintext highlighter-rouge">SEASONS</code>) and fitting a <code class="language-plaintext highlighter-rouge">LinearRegression</code> model).</p>
+
+<ul>
+  <li><strong>Test MSE: 6818 hours<sup>2</sup></strong></li>
+  <li><strong>Train MSE: 6044 hours<sup>2</sup></strong></li>
+</ul>
+
+<p>Compared to the base model, both the test and train MSE improved, however, there stille exists a large difference between the two, which is a sign of overfitting.</p>
+
+<p><strong><u>Iteration 3</u></strong></p>
+
+<p>To try and combat the overfitting, <code class="language-plaintext highlighter-rouge">LinearRegression</code> was substituted for <code class="language-plaintext highlighter-rouge">Ridge</code> regression, which is designed to reduce overfitting using a penalty term with strength λ, while still keeping all of the predictors of interest. In order to find the optimal value of the hyperparameter, 5-fold cross validation was implemented using <code class="language-plaintext highlighter-rouge">GridSearchCV</code>, which tested λ values ranging from 10<sup>-5</sup> to 10<sup>5</sup>, increasing by a factor of 10 at each step.</p>
+
+<ul>
+  <li><strong>Test MSE: 5670 hours<sup>2</sup></strong></li>
+  <li><strong>Train MSE: 6539 hours<sup>2</sup></strong></li>
+</ul>
+
+<p>This shows an improvement of about 1200 hours<sup>2</sup> compared to the base model’s test MSE. The optimal value for the λ hyperparameter was 10, meaning the model performed best with a moderately strong penalty term.</p>
+
+<p><strong><u>Final Iteration</u></strong></p>
+
+<p>Finally, since all of the current predictors are categorical variables related to climate and weather, out of curiosity, the following two quantitative, economic features were added to the model, neither of which are missing any values in the dataset:</p>
+<ul>
+  <li><strong><code class="language-plaintext highlighter-rouge">UTIL.CONTRI</code></strong>: ​​Utility industry׳s contribution to the total GSP in the State (expressed as percent of the total real GDP that is contributed by the Utility industry) (in %)
+    <ul>
+      <li>This variable could be relevant since states with stronger utility sectors are likely to experience shorter power outages.</li>
+    </ul>
+  </li>
+  <li><strong><code class="language-plaintext highlighter-rouge">POPPCT_URBAN</code></strong>: Percentage of the total population of the U.S. state represented by the urban population (in %)
+    <ul>
+      <li>This variable may also be relevant since states with larger urban populations tend to rely more heavily on electricity, making it more important for power outages to be resolved quickly.
+Exploring the distributions of these two variables in the histograms below, it appears that neither are normally distributed.</li>
+    </ul>
+  </li>
+</ul>
+
+<div style="display: flex; gap: 30px; justify-content: center;">
+  <iframe src="assets/util-contri.html" width="600" height="400" frameborder="0" style="flex-shrink: 0;"></iframe>
+
+  <iframe src="assets/poppct-urban.html" width="600" height="400" frameborder="0" style="flex-shrink: 0;"></iframe>
+</div>
+
+<p>The distribution of <code class="language-plaintext highlighter-rouge">UTIL.CONTRI</code> has a few outliers on the right end, and the distribution of <code class="language-plaintext highlighter-rouge">POPPCT_URBAN</code> is moderately skewed to the left, with outliers on the left end. However, ridge regression often performs better when the predictors are normally distributed so outliers and extreme values do not disproportionately influence coefficient estimates. As such, a <code class="language-plaintext highlighter-rouge">QuantileTransformer</code> with a normal distribution was applied to both of these features.</p>
+
+<p><strong><u>Final Model</u></strong></p>
+
+<p>Thus, the final model is composed of a <code class="language-plaintext highlighter-rouge">ColumnTransformer</code> that applies a OneHotEncoder for the categorical features, and a <code class="language-plaintext highlighter-rouge">QuantileTransformer</code> for the quantitative features. This <code class="language-plaintext highlighter-rouge">ColumnTransformer</code> is then combined with a Ridge regression model into a single <code class="language-plaintext highlighter-rouge">pipeline</code>, which is trained using <code class="language-plaintext highlighter-rouge">GridSearchCV</code> to find the optimal regularization parameter λ (which  is equal to 10) over 5 folds.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<ul>
+  <li><strong>Test MSE: 5470 hours<sup>2</sup></strong></li>
+  <li><strong>Train MSE: 6413 hours<sup>2</sup></strong></li>
+  <li><strong>Test RMSE: 74 hours</strong></li>
+</ul>
+
+<p>Compared to the base model’s test and train MSE (6948 hour<sup>2</sup> and 6114 hour<sup>2</sup>, respectively), the test MSE decreased significantly, while the train MSE actually increased slightly. Interestingly, the test MSE is lower than the train MSE, which indicates that the final model generalizes better to unseen data compared to the base model. The decrease in test MSE is much larger than the increase in train MSE, which is a good sign that the final model is not overfitting and memorizing noise in the training data set, unlike the base model. The addition of the economic features was also beneficial in explaining more of the variability in the outage duration, even though they aren’t directly related to severe weather like the climate category and region.</p>
+
+<p>The test MSE and test RMSE decreased by about 21%, demonstrating an improvement in the final model’s ability to predict power outage duration. However, an error of 74 hours (3 days) on average is still quite large, indicating potential for further improvement through additional engineering.</p>
+
+
+      <footer class="site-footer">
+        
+          <span class="site-footer-owner"><a href="https://github.com/graceliu15/power-outage-duration-analysis">power-outage-duration-analysis</a> is maintained by <a href="https://github.com/graceliu15">graceliu15</a>.</span>
+        
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+      </footer>
+    </main>
+  </body>
+</html>
